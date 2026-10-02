@@ -2,7 +2,7 @@
 
 Registro de cómo nos fue en cada fase: qué hicimos, qué se complicó, qué decidimos y qué queda pendiente. Es para guiarnos nosotros, no para el jurado. Las horas son aproximadas.
 
-**Cómo vamos:** resultado completo a las 14:52 (antes del hito de las 14:55) y modelo final probado en 2025 a las 15:00. Todo construido y verificado a las 15:12. Vamos unos 30 minutos adelantados; solo falta ensayar.
+**Cómo terminamos:** todo construido, verificado y subido a GitHub a las 15:22, unos 38 minutos antes del cierre de las 16:00. Solo falta ensayar.
 
 | Fase | Estado | Terminó |
 |---|---|---|
@@ -15,7 +15,60 @@ Registro de cómo nos fue en cada fase: qué hicimos, qué se complicó, qué de
 | F5 · Explicación por municipio | Hecha | 15:03 |
 | F6 · Mapa, boletines y tablero | Hecha | 15:07 |
 | F7 · Cierre | Hecha | 15:12 |
-| F8 · Ensayo | Guion listo; falta ensayar | 15:20 |
+| F8 · Ensayo | Guion listo; falta ensayar | 15:22 |
+
+## Resultado final
+
+**Entregamos un sistema de alerta temprana que funciona de punta a punta:** dice cada mes qué municipios de Santander reforzar, explica por qué y redacta un boletín que no inventa cifras. Todo está en GitHub y se ve abriendo `out/tablero.html`.
+
+### Cómo cubrimos lo que pedía el reto
+
+| Pedía el reto | Lo que entregamos |
+|---|---|
+| 1. Validación temporal propia | Entrenar con años pasados y probar con el siguiente, sin mezclar años; 2025 se probó una sola vez, al final |
+| 2. Modelo y explicación | XGBoost con 3 razones por municipio, escritas con sus cifras reales |
+| 3. Alertas en un mapa | Un mapa por mes de 2025 dentro de un tablero estilo Windows 98 |
+| 4. Boletín sin cifras inventadas | 98 boletines, todos revisados por el verificador: **0 cifras sin fuente** |
+| 5. Qué no puede anticipar | Sección de límites en el cuaderno, el tablero y la sustentación |
+
+### Los números que vamos a defender (2025)
+
+| | Nuestro sistema | Repetir lo del año anterior |
+|---|---|---|
+| Meses con deslizamiento detectados (rojo o amarillo) | **84 %** | 11 % |
+| Calidad del ranking (PR-AUC) | **0,204** | 0,106 |
+
+- **En rojo,** 1 de cada 5 municipios tuvo deslizamiento: el doble del azar (9,5 %).
+- **En abril,** los 23 municipios con deslizamiento quedaron en rojo o amarillo.
+- **Las probabilidades son realistas** (Brier 0,082): cuando el sistema dice 20 %, pasa más o menos 1 de cada 5 veces.
+- **Se escaparon 16 de 99 deslizamientos,** la mayoría en meses secos.
+- **La trampa del reto, medida:** usar la lluvia del mismo mes subía la calidad de 0,190 a 0,243, pero es una mejora falsa. No la usamos.
+
+### Calidad del trabajo
+
+- **10 pruebas automáticas** en verde: rezagos, validación, verificador y razones legibles.
+- **El cuaderno corre completo** en unos 13 segundos, sin errores, y es reproducible: los boletines salen idénticos al repetir.
+- **Todo está en GitHub;** el último commit de código fue a las 15:22.
+
+### Lo que salió bien
+
+- **Tener un resultado completo temprano** (14:52) nos dejó tiempo para mejorarlo sin presión.
+- **Las decisiones salieron de los datos:** el segundo ciclo del mes, XGBoost sin peso y el rojo limitado a 10 los elegimos porque los números lo mostraron.
+- **El verificador del boletín atrapó un error real en su primera prueba.** Es nuestra mejor evidencia para el jurado.
+
+### Lo que aprendimos (para la próxima)
+
+1. **Instalar todo antes.** La red lenta nos costó más de 20 minutos al inicio.
+2. **Verificar toda cifra antes de escribirla en la sustentación.** Casi llevamos al jurado un "todos" que era "la mitad".
+3. **Probar como se va a presentar.** El mapa funcionaba con servidor y fallaba al abrirlo como archivo.
+4. **Revisar que las explicaciones se lean bien,** no solo que sean correctas: "lluvia 0,7 veces su promedio" como motivo de alerta confundía.
+
+### Antes de presentar
+
+- [ ] Ensayar el guion (`docs/07_guion.md`) con cronómetro.
+- [ ] Copiar el proyecto a una USB.
+- [ ] Dejar abierto `out/tablero.html` en abril de 2025 y el cuaderno en VS Code.
+- [ ] Preguntar a la comisión si los datos son simulados.
 
 ---
 
