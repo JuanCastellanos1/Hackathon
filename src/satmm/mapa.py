@@ -9,6 +9,8 @@ from satmm.boletin import num
 from satmm.datos import DATA
 from satmm.explicacion import texto_razon
 
+TOPO = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
+
 COLORES = {"Rojo": "#d7301f", "Amarillo": "#fdae35", "Verde": "#41ab5d"}
 
 
@@ -29,7 +31,12 @@ def construir(alertas: pd.DataFrame, titulo: str,
                                    for r in fila.get("razones", [])) or "—",
         })
 
-    m = folium.Map(location=[6.9, -73.4], zoom_start=8, tiles="OpenStreetMap")
+    # Esri y no OpenStreetMap: OSM bloquea sus mosaicos (403) cuando el HTML se abre como archivo
+    # local, porque el navegador no envía Referer. Sin internet queda el fondo gris y los polígonos.
+    m = folium.Map(location=[6.9, -73.4], zoom_start=8, tiles=None)
+    folium.TileLayer(TOPO, attr="Tiles &copy; Esri, HERE, Garmin, USGS, NGA", name="Relieve").add_to(m)
+    m.get_root().header.add_child(folium.Element(
+        "<style>.leaflet-container{background:#D9D9D9}</style>"))
     folium.GeoJson(
         geo,
         style_function=lambda f: {"fillColor": COLORES[f["properties"]["nivel"]],
@@ -50,3 +57,4 @@ def construir(alertas: pd.DataFrame, titulo: str,
         f"box-shadow:inset 1px 1px 0 #FFF,inset -1px -1px 0 #808080;"
         f"font:11px Tahoma,sans-serif;line-height:1.6'><b>{titulo}</b>{leyenda}</div>"))
     return m
+

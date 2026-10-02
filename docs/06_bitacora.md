@@ -2,7 +2,7 @@
 
 Registro de cómo nos fue en cada fase: qué hicimos, qué se complicó, qué decidimos y qué queda pendiente. Es para guiarnos nosotros, no para el jurado. Las horas son aproximadas.
 
-**Cómo vamos:** resultado completo a las 14:52 (antes del hito de las 14:55) y modelo final probado en 2025 a las 15:00. Explicación por municipio lista a las 15:03 y tablero a las 15:07. Vamos unos 25 minutos adelantados.
+**Cómo vamos:** resultado completo a las 14:52 (antes del hito de las 14:55) y modelo final probado en 2025 a las 15:00. Todo construido y verificado a las 15:12. Vamos unos 30 minutos adelantados; solo falta ensayar.
 
 | Fase | Estado | Terminó |
 |---|---|---|
@@ -14,8 +14,8 @@ Registro de cómo nos fue en cada fase: qué hicimos, qué se complicó, qué de
 | F4 · Modelo principal y umbral | Hecha | 15:00 |
 | F5 · Explicación por municipio | Hecha | 15:03 |
 | F6 · Mapa, boletines y tablero | Hecha | 15:07 |
-| F7 · Cierre | Pendiente | |
-| F8 · Ensayo | Pendiente | |
+| F7 · Cierre | Hecha | 15:12 |
+| F8 · Ensayo | Guion listo; falta ensayar | 15:20 |
 
 ---
 
@@ -144,6 +144,33 @@ Ninguno bloquea; los dos se resuelven en F4.
 
 **Ojo:** la carpeta `out/` no se sube a GitHub, porque se genera al correr el cuaderno. Si queremos el tablero en el repositorio o en una USB, hay que copiarlo aparte.
 
+## F7 · Cierre
+
+**Qué hicimos:**
+- **Ejecutamos el cuaderno completo en un kernel limpio**, como hará el jurado si le damos *Run All*: 30 celdas, sin errores, en unos 13 segundos. Quedó guardado con todos sus resultados, así que se puede mostrar sin correr nada.
+- Silenciamos un aviso de una librería que ensuciaba la primera celda.
+- **Completamos la sección final del cuaderno:** qué no puede anticipar el sistema, qué decidimos no construir y qué haríamos con dos horas más.
+- **El README** explica cómo ver el resultado y cómo reproducirlo desde cero.
+- Subimos `out/` al repositorio: el tablero, los 12 mapas y los 98 boletines están en GitHub.
+
+**Comprobación de que es reproducible:** al volver a correr todo, los 98 boletines salieron idénticos. Los mapas cambian solo en identificadores internos que genera Folium, no en su contenido.
+
+**Pendiente manual:** copiar la carpeta del proyecto (o al menos `out/`) a una USB como respaldo. Eso lo tenemos que hacer nosotros.
+
+## Arreglo: el fondo del mapa
+
+**Qué pasó:** al abrir el tablero como archivo en el navegador, el fondo del mapa salía lleno de avisos "403 Access blocked". OpenStreetMap bloquea sus mosaicos cuando la página no viene de un servidor web. Nosotros no lo habíamos visto porque lo probamos con un servidor local.
+
+**Arreglo:** cambiamos el fondo a Esri (mapa topográfico), que funciona abriendo el archivo directamente y además muestra el relieve. Lo comprobamos abriendo el mapa como archivo.
+
+**Lección:** probar siempre de la misma forma en que se va a presentar.
+
+## F8 · Ensayo
+
+**Qué hicimos:** escribimos el guion de 5 minutos en `docs/07_guion.md`. Tiene qué decir y qué mostrar en cada momento, dónde está el código que el jurado probablemente señale (con número de línea) y un plan B si algo falla en vivo.
+
+**Falta, y es de nosotros:** ensayarlo en voz alta al menos una vez, con cronómetro, y hacer la prueba en vivo del verificador (agregar "350 viviendas" al boletín).
+
 ---
 
 ## Pendientes y preguntas abiertas
@@ -154,4 +181,6 @@ Ninguno bloquea; los dos se resuelven en F4.
 - [x] Explicación por municipio: por qué sale cada uno en alerta (F5).
 - [ ] Preguntarle a la comisión si los datos son simulados.
 - [x] Llenar las cifras reales en `05_sustentacion.md`.
-- [ ] Decidir si `out/` (tablero, mapas, boletines) se sube al repositorio para la presentación.
+- [x] Subir `out/` al repositorio → subido.
+- [ ] Copiar el proyecto a una USB de respaldo (manual).
+- [ ] Ensayar el guion con cronómetro (manual).
