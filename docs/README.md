@@ -9,4 +9,5 @@ Reto avanzado del Hackathon UDES: prototipo de alerta temprana de movimientos en
 | [03_arquitectura.md](03_arquitectura.md) | Estructura, componentes, clases, secuencia y estados (Mermaid) |
 | [04_plan_implementacion.md](04_plan_implementacion.md) | Cronograma de 105 minutos, fases, criterios de listo y riesgos |
 | [05_sustentacion.md](05_sustentacion.md) | Respuestas preparadas para el jurado |
+| [06_bitacora.md](06_bitacora.md) | Cómo nos fue en cada fase (para el equipo) |
 | [Banco de retos Hackathon 2.pdf](Banco%20de%20retos%20Hackathon%202.pdf) | Enunciado original |

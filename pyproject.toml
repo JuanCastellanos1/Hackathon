@@ -1,0 +1,11 @@
+[project]
+name = "satmm"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "pandas", "numpy", "scikit-learn", "xgboost-cpu", "shap",
+    "folium", "jinja2", "matplotlib", "ipykernel", "pytest",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

@@ -1,0 +1,119 @@
+# Bitácora de construcción
+
+Registro de cómo nos fue en cada fase: qué hicimos, qué se complicó, qué decidimos y qué queda pendiente. Es para guiarnos nosotros, no para el jurado. Las horas son aproximadas.
+
+**Cómo vamos:** resultado completo a las 14:52 (antes del hito de las 14:55) y modelo final probado en 2025 a las 15:00. Vamos unos 20 minutos adelantados.
+
+| Fase | Estado | Terminó |
+|---|---|---|
+| Preparación: propuesta y docs | Hecha | 14:20 |
+| F0 · Entorno y carga de datos | Hecha | 14:46 |
+| F1 · Variables | Hecha | 14:47 |
+| F2 · Validación y modelo simple | Hecha | 14:48 |
+| F3 · Primer resultado completo | Hecha | 14:52 |
+| F4 · Modelo principal y umbral | Hecha | 15:00 |
+| F5 · Explicación por municipio | Pendiente | |
+| F6 · Mapa y boletín finales | Pendiente | |
+| F7 · Cierre | Pendiente | |
+| F8 · Ensayo | Pendiente | |
+
+---
+
+## Preparación: propuesta y documentación
+
+**Qué hicimos:** leímos el enunciado del reto avanzado, armamos la propuesta y bajamos el repositorio con los datos. Organizamos todo en `data/` y `docs/`.
+
+**Qué se complicó:** el primer push falló porque la cuenta de GitHub no tenía permiso sobre el repositorio. Lo resolvimos dando acceso.
+
+**Lo que aprendimos de los datos:**
+- Vienen muy limpios, posiblemente simulados (el "plan B" del enunciado). Hay que preguntarle a la comisión.
+- Hay un GeoJSON con la forma de cada municipio, así que el mapa puede colorear municipios completos y no solo poner puntos.
+- Los deslizamientos se concentran en dos temporadas: abril–mayo y octubre–noviembre.
+
+## F0 · Entorno y carga de datos
+
+**Qué hicimos:** creamos el entorno de Python, instalamos las librerías y escribimos la carga de datos con una tabla de problemas encontrados.
+
+**Qué se complicó:** la instalación tardó más de 20 minutos por el internet lento (unos 200 KB/s). XGBoost intentaba bajar unos 300 MB de drivers de NVIDIA que no necesitamos; lo cambiamos por la versión solo CPU.
+
+**Lección:** el día del reto no se puede contar con instalar nada. Todo tiene que llegar instalado.
+
+## F1 · Variables
+
+**Qué hicimos:** construimos las variables del modelo usando solo lo que se sabe el primer día del mes: lluvia de los dos meses anteriores, deslizamientos del último año, lo que suele pasar en ese municipio y mes, altitud y ubicación.
+
+**Decisiones:**
+- **No usamos la lluvia del mismo mes.** Es la trampa del reto: ese dato no existe al inicio del mes. Lo dejamos bloqueado en el código para que no se cuele por error.
+- **El mes lo representamos con dos ciclos al año,** porque hay dos temporadas de lluvia. Con un solo ciclo el mes casi no aportaba; con dos, se volvió la variable más útil.
+- **2015 solo sirve para alimentar a 2016,** porque le falta historia previa.
+
+**Cómo lo comprobamos:** pruebas automáticas que revisan, municipio por municipio, que los datos de meses anteriores caen en el lugar correcto.
+
+## F2 · Validación y modelo simple
+
+**Qué hicimos:** probamos el modelo como si estuviéramos en el pasado. Entrenamos hasta 2020 y probamos en 2021; luego hasta 2021 y probamos en 2022; y así hasta 2024. **2025 no se toca** hasta el final.
+
+**Cómo nos fue:**
+- El modelo simple (regresión logística) le gana a las dos referencias en todos los años, no solo en promedio.
+- Detecta el 71 % de los meses con deslizamiento. La referencia del reto ("repetir lo del año pasado") solo detecta el 18 %.
+- Medimos la trampa: si usáramos la lluvia del mismo mes, el modelo parecería bastante mejor. Esa mejora es falsa, y la tenemos lista para mostrársela al jurado.
+
+**Lo que nos preocupó:**
+1. **Demasiadas alertas.** Para detectar el 71 % hay que alertar a unos 37 de 87 municipios por mes. No es un error: la señal disponible a inicio de mes es débil. Es un intercambio: más sensibilidad cuesta más falsas alarmas.
+2. **Porcentajes inflados.** La probabilidad que da el modelo es más alta que la real. El orden de los municipios sí sirve, pero el porcentaje no se debe publicar tal cual.
+
+Ninguno bloquea; los dos se resuelven en F4.
+
+## F3 · Primer resultado completo
+
+**Qué hicimos:**
+- **Un semáforo de dos niveles de acción.** El amarillo es amplio y barato: vigilancia, detecta el 71 %. El rojo es estrecho, unos 10 municipios al mes en promedio, para mover recursos.
+- **El mapa** de Santander coloreado por nivel; al pasar el mouse muestra el municipio, su puesto y sus cifras.
+- **El boletín** para el consejo municipal, con un verificador que revisa que cada número salga de los datos.
+
+**Lo mejor de la fase:** el verificador atrapó un error real en la primera prueba. La plantilla decía "últimos 12 meses" con el 12 escrito a mano y no sacado de los datos. Eso prueba que funciona, y es justo lo que pregunta el jurado.
+
+**Qué observamos:**
+- **Enero de 2025 sale todo en verde.** Es correcto: es temporada seca y hubo un solo deslizamiento. Para la demo usamos abril, en plena temporada.
+- **Abril de 2025 sale con 39 municipios en rojo, no 10,** porque el umbral es el mismo todo el año y en temporada de lluvias todos suben. En abril hubo 23 municipios con deslizamiento y el semáforo los marcó todos en rojo o amarillo, pero 39 rojos es demasiado para el consejo. **Hay que decidirlo en F4:** o el rojo se limita a los N más altos de cada mes, o aceptamos que en temporada hay más rojos y lo explicamos.
+- El fondo de mapa CartoDB ahora pide clave; cambiamos a OpenStreetMap.
+- El boletín decía "por qué está en alerta" aunque el municipio estuviera en verde. Lo corregimos.
+
+**Archivos que salen:** `out/mapa_alertas.html` y `out/boletin.md`.
+
+## F4 · Modelo principal y umbral
+
+**Qué hicimos:** probamos XGBoost contra la logística, elegimos los umbrales con 2024 y, ya con todo congelado, hicimos la prueba final en 2025, **una sola vez**.
+
+**La sorpresa buena:** XGBoost **sin** peso de clase resolvió dos problemas de una vez:
+- predice mejor que la logística (le gana en 3 de 4 años y en 2025);
+- sus porcentajes salen realistas. Si dice 20 %, pasa más o menos 1 de cada 5 veces. Eso nos deja publicar la probabilidad en el boletín sin engañar a nadie.
+
+**Decisión:** el rojo son **los 10 municipios más altos de cada mes** (y solo si superan el umbral amarillo). Así el consejo nunca recibe más rojos de los que puede atender. En los meses secos puede haber cero rojos, y está bien.
+
+**Cómo nos fue en 2025:**
+
+| | Nuestro sistema | "Repetir lo del año pasado" |
+|---|---|---|
+| Meses con deslizamiento detectados (rojo o amarillo) | 84 % | 11 % |
+| Aciertos dentro del rojo | 1 de cada 5 | n/a |
+
+- En rojo, 1 de cada 5 municipios tuvo deslizamiento: el doble del azar (9,5 %).
+- Abril y octubre: el sistema marcó en rojo o amarillo a todos los municipios que tuvieron deslizamiento.
+
+**Lo que no salió tan bien:**
+- **En temporada de lluvias, casi todo el departamento queda en amarillo** (71–77 de 87 municipios en abril, mayo y octubre). Hay que contarlo como lo que es: "temporada de lluvias, todo Santander en vigilancia". Los 10 rojos son los que necesitan acción.
+- **16 de 99 deslizamientos se escaparon** (quedaron en verde). La mayoría pasó en meses secos, cuando casi no alertamos, y la mitad en municipios sin deslizamientos el año anterior. Es el límite más honesto que podemos mostrar.
+
+**Un tropiezo:** escribimos en la sustentación que *todos* los deslizamientos no detectados eran de municipios sin historial. Lo verificamos y era falso: solo la mitad. Lo corregimos antes de que llegara al jurado. **Lección: toda cifra que vaya a la sustentación se verifica con el código.**
+
+---
+
+## Pendientes y preguntas abiertas
+
+- [x] Decidir la regla del rojo en temporada de lluvias → los 10 más altos de cada mes (F4).
+- [x] Corregir los porcentajes inflados → XGBoost sin peso de clase (F4).
+- [x] Probar XGBoost contra la logística → gana XGBoost (F4).
+- [ ] Explicación por municipio: por qué sale cada uno en alerta (F5).
+- [ ] Preguntarle a la comisión si los datos son simulados.
+- [ ] Llenar las cifras reales en `05_sustentacion.md`.

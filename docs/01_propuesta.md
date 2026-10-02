@@ -21,12 +21,13 @@ Objetivo: `hubo_mm` del mes *t*. Todas las variables usan información hasta el 
 | `lluvia_t1` | `lluvia_mm_mes_anterior` | Lluvia reciente |
 | `lluvia_t2` | `lluvia_mm` desplazada 2 meses | Lluvia antecedente |
 | `lluvia_2m` | `lluvia_t1 + lluvia_t2` | Suelo saturado; el plan B del enunciado genera el riesgo a partir de esto |
-| `lluvia_anom` | `lluvia_t1` / promedio de ese mes en el municipio, calculado solo con años de entrenamiento | Lluvia inusual para ese lugar |
+| `lluvia_anom` | `lluvia_t1` / promedio de `lluvia_t1` del mismo municipio y mes en años anteriores | Lluvia inusual para ese lugar |
 | `mm_12m` | Movimientos en masa de los 12 meses anteriores (archivo base, `shift(1)`) | Susceptibilidad del terreno |
 | `mm_hist_mes` | Tasa histórica de `hubo_mm` del municipio en ese mes calendario, solo años anteriores | Climatología local |
 | `eventos_12m` | Del panel | Historial general |
 | `altitud_m`, `latitud`, `longitud` | Cabecera | Relieve y región |
-| `mes_sin`, `mes_cos` | `sin(2π·mes/12)`, `cos(2π·mes/12)` | Las dos temporadas de lluvia |
+| `mes_sin`, `mes_cos` | `sin(2π·mes/12)`, `cos(2π·mes/12)` | Ciclo anual sin salto de diciembre a enero |
+| `mes_sin2`, `mes_cos2` | `sin(4π·mes/12)`, `cos(4π·mes/12)` | Las dos temporadas de lluvia; `mes_sin2` es la variable más correlacionada (−0,19) |
 
 **Excluidas a propósito:**
 - `lluvia_mm` y `eventos_mes`: no se conocen el día 1 del mes (fuga de datos). En producción, `lluvia_mm` se reemplazaría por un pronóstico estacional del IDEAM.
@@ -61,7 +62,7 @@ gantt
 - **Un año completo por pliegue:** los meses de un mismo año comparten fenómenos como La Niña 2022. Partir dentro del año filtraría ese patrón.
 - **Años secos y húmedos:** la tasa va de 5,4 % (2024) a 14,6 % (2022). Reportamos media y rango entre pliegues, no un solo número.
 - **2015 se usa solo para rezagos:** sus variables de 12 meses están incompletas ([Datos, hallazgo 3](02_datos.md#hallazgos)).
-- **Sin fuga dentro del pliegue:** `lluvia_anom` y `mm_hist_mes` se calculan solo con los años de entrenamiento de cada pliegue.
+- **Sin fuga en las climatologías:** `lluvia_anom` y `mm_hist_mes` usan solo años anteriores al de cada fila, así que valen igual en cualquier pliegue.
 - **2025 se toca una sola vez,** al final, con el modelo y el umbral ya fijados.
 
 ## Modelo
@@ -71,7 +72,7 @@ gantt
 | Base A: repetir el mismo mes del año anterior | Línea base exigida en el reto medio; la mantenemos como referencia |
 | Base B: `mm_hist_mes` como probabilidad | Climatología: "lo que suele pasar en este municipio y este mes" |
 | Regresión logística (`log1p` en lluvias, estandarizada, `class_weight="balanced"`) | Modelo interpretable de referencia |
-| **XGBoost** (`scale_pos_weight` ≈ 11, `max_depth` 3–4, unos 300 árboles) | Modelo principal |
+| **XGBoost sin peso de clase** (`max_depth` 2, 300 árboles) | Modelo principal. Sin peso para que la probabilidad publicada quede calibrada; el desbalance se maneja con el umbral |
 
 **Métricas, en este orden:**
 1. **PR-AUC:** resume el desempeño sin elegir umbral, y con 8 % de positivos es más honesta que el ROC-AUC.
@@ -81,15 +82,17 @@ gantt
 
 **No usamos exactitud:** un modelo que nunca alerta acierta el 92 % de las veces.
 
-**Prioridad: sensibilidad.** Un falso negativo es un municipio sin preparar con viviendas o una vía en riesgo; un falso positivo cuesta una visita preventiva. El umbral se elige en el pliegue 4 para lograr una sensibilidad de al menos 0,70, y después se congela.
+**Prioridad: sensibilidad.** Un falso negativo es un municipio sin preparar con viviendas o una vía en riesgo; un falso positivo cuesta una visita preventiva. El umbral amarillo se elige en el pliegue 4 para lograr una sensibilidad de al menos 0,70, y después se congela. El rojo se limita a la capacidad de respuesta del consejo.
 
 **Semáforo:**
 
 | Nivel | Regla | Acción sugerida |
 |---|---|---|
-| Rojo | p ≥ umbral | Activar el consejo municipal, revisar taludes y vías |
-| Amarillo | umbral/2 ≤ p < umbral | Vigilancia y comunicación preventiva |
-| Verde | p < umbral/2 | Preparación ordinaria |
+| Rojo | Entre los 10 más altos del mes **y** p ≥ umbral amarillo | Activar el consejo municipal, revisar taludes y vías |
+| Amarillo | p ≥ umbral amarillo (sensibilidad ≥ 0,70 en 2024) | Vigilancia y comunicación preventiva |
+| Verde | p < umbral amarillo | Preparación ordinaria |
+
+**Resultado en 2025** (prueba final, evaluada una vez): PR-AUC 0,204 frente a 0,106 de la línea base A y 0,144 de la B. El semáforo detecta en rojo o amarillo el 84 % de los meses con movimiento en masa (la línea base A, el 11 %). Brier 0,082, es decir, probabilidad calibrada.
 
 ## Explicación
 

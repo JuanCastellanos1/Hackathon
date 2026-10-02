@@ -22,19 +22,19 @@ Un tablero web, un pronóstico de lluvia, un modelo espacial con vecinos y el aj
 
 **¿Qué harían con dos horas más?**
 1. Agregar el riesgo de los municipios vecinos.
-2. Calibrar la probabilidad (isotónica), porque el boletín la publica como porcentaje.
+2. Afinar el umbral por temporada: en meses secos el sistema casi no alerta, y ahí se concentran los falsos negativos.
 3. Construir una curva de costo con el consejo: cuánto cuesta una falsa alarma frente a un evento no anticipado, para fijar el umbral con su criterio y no solo con el nuestro.
 
 ## Preguntas que probablemente harán
 
 **¿Usaron `lluvia_mm`?**
-No. Es la lluvia del mismo mes y no se conoce el día 1. Medimos el efecto: con `lluvia_mm` la PR-AUC sube a [X], que es una mejora falsa. En producción se reemplazaría por un pronóstico.
+No. Es la lluvia del mismo mes y no se conoce el día 1. Medimos el efecto: con `lluvia_mm` la PR-AUC de la logística sube de 0,190 a 0,243, que es una mejora falsa. En producción se reemplazaría por un pronóstico.
 
 **¿Por qué ese umbral?**
-Lo fijamos en 2024 para detectar al menos el 70 % de los meses con movimiento en masa y lo congelamos antes de mirar 2025. Bajarlo detecta más eventos y trae más falsas alarmas; demasiadas falsas alarmas hacen que el consejo deje de creer en el sistema. Mostramos la curva de precisión contra sensibilidad.
+Son dos reglas. El amarillo se fijó en 2024 para detectar al menos el 70 % de los meses con movimiento en masa, y se congeló antes de mirar 2025; en 2025 detectó el 84 %. El rojo son los 10 municipios más altos de cada mes, que es la capacidad que suponemos del consejo departamental; en rojo, 1 de cada 5 alertas acierta, el doble de la tasa base (9,5 %). Bajarlo detecta más eventos y trae más falsas alarmas; demasiadas falsas alarmas hacen que el consejo deje de creer en el sistema. Mostramos la curva de precisión contra sensibilidad.
 
 **¿Qué es un falso negativo aquí?**
-[Municipio] en [mes] de 2025: el modelo lo dejó en verde o amarillo y hubo un movimiento en masa con [n] personas afectadas. Así se ve el costo concreto.
+En 2025, 16 de 99 meses con movimiento en masa quedaron en verde; por ejemplo, Jesús María en enero y Pinchote en diciembre (405 mm de lluvia en dos meses). Dos patrones: 11 de los 16 ocurrieron en meses secos (enero, febrero, julio, agosto y diciembre), cuando el sistema casi no alerta, y la mitad (8) no tenía movimientos en masa en los 12 meses previos. El modelo depende de la temporada y del historial: un evento fuera de temporada en un municipio sin reportes previos es casi invisible. Ese es el costo concreto del subregistro.
 
 **¿Por qué no exactitud?**
 Con 8 % de positivos, un modelo que nunca alerta acierta el 92 % de las veces y es inútil.
