@@ -42,5 +42,8 @@ Con 8 % de positivos, un modelo que nunca alerta acierta el 92 % de las veces y 
 **¿Qué municipio podría estar en verde por reportar poco?**
 Los que tienen altitud y lluvia altas pero pocos reportes históricos. Los listamos aparte como "posible subregistro". El modelo no puede distinguir entre "no pasa" y "no se reporta".
 
-**¿Por qué sale [municipio] en alerta?**
-Se muestra su cascada SHAP: [lluvia de dos meses = X mm], [movimientos en masa en 12 meses = Y] y [mes de temporada de lluvias].
+**¿Por qué sale San Andrés en alerta?** (abril de 2025, puesto 1 de 87, probabilidad 37,6 %)
+Se muestra su cascada SHAP. Además de la temporada, que sube el riesgo en todo el departamento, sus 3 razones propias son: 529,6 mm de lluvia en los dos meses anteriores, cabecera a 1.650 m de altitud, y 2 movimientos en masa en los últimos 12 meses.
+
+**¿Tiene sentido lo que aprendió el modelo?**
+Sí, y lo comprobamos: el aporte al riesgo sube con la lluvia del mes anterior (correlación 0,94 entre la variable y su aporte), con el historial (0,94) y con la altitud (0,91). Los factores que más pesan son la temporada, la lluvia reciente y el relieve.

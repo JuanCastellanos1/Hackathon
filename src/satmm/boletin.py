@@ -4,6 +4,8 @@ import re
 import pandas as pd
 from jinja2 import Environment
 
+from satmm.explicacion import texto_razon
+
 MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
          "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
 
@@ -25,12 +27,10 @@ PLANTILLA = """\
 por riesgo estimado de movimiento en masa para {{ mes_nombre }}. \
 Probabilidad estimada de al menos un movimiento en masa en el mes: {{ prob_pct | num }} %.
 
-## {{ "Por qué está en alerta" if nivel != "Verde" else "Factores evaluados" }}
-- Lluvia de los dos meses anteriores: {{ lluvia_2m | num }} mm.
-- Lluvia del mes anterior: {{ lluvia_t1 | num }} mm.
-- Movimientos en masa registrados en los últimos {{ ventana_meses }} meses: {{ mm_12m | num }}.
-- En años anteriores, {{ mes_nombre }} tuvo movimiento en masa en este municipio el {{ pct_hist_mes | num }} % de las veces.
-
+## {{ "Por qué está en alerta" if nivel != "Verde" else "Factores que más pesan" }}
+{% if temporada_sube %}- {{ mes_nombre | capitalize }} es temporada de lluvias en Santander: el riesgo sube en todo el departamento.
+{% endif %}{% for r in razones %}- {{ r | capitalize }}.
+{% endfor %}
 ## Antecedentes (últimos {{ ventana_meses }} meses)
 - Emergencias registradas: {{ emergencias_12m | num }}.
 - Personas afectadas: {{ personas_12m | num }}.
@@ -45,7 +45,7 @@ el lugar exacto ni eventos no reportados.
 """
 
 
-def _num(x) -> str:
+def num(x) -> str:
     """Formato colombiano: punto de miles, coma decimal, máximo 1 decimal."""
     x = round(float(x), 1)
     if x == int(x):
@@ -54,17 +54,17 @@ def _num(x) -> str:
 
 
 _env = Environment(trim_blocks=False, keep_trailing_newline=True)
-_env.filters["num"] = _num
+_env.filters["num"] = num
 
 
 def cifras(alerta: pd.Series, emergencias: pd.DataFrame, total_municipios: int) -> dict:
-    """Única fuente de cifras del boletín."""
+    """Única fuente de cifras del boletín. Las razones vienen de explicacion.agregar_razones."""
     anio, mes = int(alerta["anio"]), int(alerta["mes"])
     inicio = pd.Timestamp(anio, mes, 1) - pd.DateOffset(months=12)
     fin = pd.Timestamp(anio, mes, 1)
     hist = emergencias[(emergencias["codigo_dane"] == alerta["codigo_dane"])
                        & (emergencias["fecha"] >= inicio) & (emergencias["fecha"] < fin)]
-    return {
+    c = {
         "municipio": alerta["municipio"],
         "anio": anio,
         "mes_nombre": MESES[mes - 1],
@@ -73,15 +73,17 @@ def cifras(alerta: pd.Series, emergencias: pd.DataFrame, total_municipios: int) 
         "total_municipios": total_municipios,
         "ventana_meses": 12,
         "prob_pct": round(100 * float(alerta["p"]), 1),
-        "lluvia_2m": round(float(alerta["lluvia_2m"]), 1),
-        "lluvia_t1": round(float(alerta["lluvia_t1"]), 1),
-        "mm_12m": int(alerta["mm_12m"]),
-        "pct_hist_mes": round(100 * float(alerta["mm_hist_mes"]), 1),
         "emergencias_12m": len(hist),
         "personas_12m": int(hist["personas_afectadas"].sum()),
         "viviendas_12m": int(hist["viviendas_afectadas"].sum()),
         "acciones": ACCIONES[alerta["nivel"]],
+        "temporada_sube": bool(alerta.get("aporte_temporada", 0) > 0),
+        "razones": [texto_razon(r, mes, num) for r in alerta.get("razones", [])],
     }
+    for i, r in enumerate(alerta.get("razones", [])):
+        for j, v in enumerate(r["valores"]):
+            c[f"razon_{i}_{j}"] = v
+    return c
 
 
 def redactar(c: dict, plantilla: str = PLANTILLA) -> str:

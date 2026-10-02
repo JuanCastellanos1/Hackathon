@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SATMM Santander</title>
+<style>
+:root{--face:#C0C0C0;--light:#DFDFDF;--white:#FFF;--shadow:#808080;--dark:#000;
+  --navy:#000080;--desk:#008080;--rojo:#D7301F;--amarillo:#FDAE35;--verde:#41AB5D}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:"MS Sans Serif",Tahoma,"Segoe UI",sans-serif;font-size:11px;color:#000;
+  background:var(--desk);cursor:default;overflow:hidden}
+.out{border:2px solid;border-color:#DFDFDF #000 #000 #DFDFDF;box-shadow:inset 1px 1px 0 #FFF,inset -1px -1px 0 #808080}
+.in{border:2px solid;border-color:#808080 #FFF #FFF #808080;box-shadow:inset 1px 1px 0 #000,inset -1px -1px 0 #DFDFDF}
+.groove{border:1px solid;border-color:#808080 #FFF #FFF #808080}
+
+/* ventana */
+#win{position:fixed;top:6px;left:6px;right:6px;bottom:34px;background:var(--face);padding:3px;
+  display:flex;flex-direction:column}
+.titlebar{height:20px;display:flex;align-items:center;gap:4px;padding:1px 2px;
+  background:linear-gradient(90deg,#000080,#1084D0);color:#FFF;font-weight:bold}
+.titlebar .t{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tbtn{width:16px;height:14px;background:var(--face);border:1px solid;border-color:#FFF #000 #000 #FFF;
+  display:grid;place-items:center}
+.menubar{height:20px;display:flex;align-items:center;gap:2px;padding:0 2px}
+.menubar span{padding:2px 6px}
+.menubar span:hover{background:var(--navy);color:#FFF}
+.toolbar{display:flex;align-items:center;gap:6px;padding:4px 4px 6px;flex-wrap:wrap;
+  border-top:1px solid #808080;box-shadow:inset 0 1px 0 #FFF}
+.btn{background:var(--face);color:#000;padding:3px 10px;height:23px;min-width:28px;
+  border:2px solid;border-color:#DFDFDF #000 #000 #DFDFDF;
+  box-shadow:inset 1px 1px 0 #FFF,inset -1px -1px 0 #808080;font:11px "MS Sans Serif",Tahoma,sans-serif}
+.btn:hover{background:#C6C6C6}
+.btn:active{border-color:#000 #DFDFDF #DFDFDF #000;box-shadow:inset 1px 1px 0 #808080,inset -1px -1px 0 #FFF}
+.btn:focus{outline:1px dotted #000;outline-offset:-5px}
+.btn[disabled]{color:#808080;text-shadow:1px 1px 0 #FFF}
+select.field{height:21px;background:#FFF;border:1px solid;border-color:#808080 #FFF #FFF #808080;
+  box-shadow:inset 1px 1px 0 #000;font:11px "MS Sans Serif",Tahoma,sans-serif;padding:0 2px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 6px}
+.sq{width:10px;height:10px;display:inline-block;border:1px solid #000}
+.sep{width:2px;height:20px;border-left:1px solid #808080;border-right:1px solid #FFF}
+
+/* cuerpo */
+#body{flex:1;display:flex;gap:6px;min-height:0;padding:0 2px}
+#mapbox{flex:1.35;min-width:0;display:flex;flex-direction:column}
+#mapbox iframe{flex:1;border:0;width:100%;background:#FFF}
+#side{flex:1;min-width:0;display:flex;flex-direction:column}
+.tabs{display:flex;padding-left:2px;position:relative;z-index:1}
+.tab{padding:3px 10px;margin-right:-2px;background:var(--face);position:relative;top:2px;
+  border:2px solid;border-bottom:none;border-color:#DFDFDF #000 transparent #DFDFDF;
+  box-shadow:inset 1px 1px 0 #FFF,inset -1px 0 0 #808080}
+.tab.on{top:0;padding-bottom:5px;z-index:2;margin-bottom:-2px}
+.page{flex:1;min-height:0;padding:8px;display:none;flex-direction:column;gap:8px}
+.page.on{display:flex}
+fieldset{border:1px solid;border-color:#808080 #FFF #FFF #808080;box-shadow:1px 1px 0 #FFF inset;padding:6px 8px 8px}
+legend{padding:0 3px}
+
+/* lista */
+.list{flex:1;min-height:120px;background:#FFF;overflow:auto}
+table{width:100%;border-collapse:collapse}
+th{position:sticky;top:0;background:var(--face);text-align:left;font-weight:normal;padding:2px 5px;
+  border:1px solid;border-color:#FFF #000 #000 #FFF;box-shadow:inset -1px -1px 0 #808080}
+td{padding:2px 5px;white-space:nowrap}
+tr.sel td{background:var(--navy);color:#FFF}
+tbody tr:hover td{background:#E8E8F5}
+tbody tr.sel:hover td{background:var(--navy)}
+.num{text-align:right}
+
+#razones{min-height:70px;background:#FFF;padding:6px 8px;line-height:1.5}
+#razones li{margin-left:14px}
+.doc{flex:1;min-height:0;background:#FFF;overflow:auto;padding:10px 14px;font:12px Tahoma,"Segoe UI",sans-serif;
+  line-height:1.45;user-select:text}
+.doc h2{font-size:14px;margin-bottom:6px}.doc h3{font-size:12px;margin:10px 0 3px}
+.doc ul{margin-left:18px}.doc p{margin:4px 0}
+.ok{color:#006400;font-weight:bold}.bad{color:#B00000;font-weight:bold}
+
+.kpi{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center}
+.progress{height:20px;background:#FFF;border:1px solid #808080;box-shadow:inset 1px 1px 0 #000,inset -1px -1px 0 #DFDFDF;padding:1px;min-width:120px}
+.progress .fill{height:100%;background:repeating-linear-gradient(90deg,#000080 0 10px,transparent 10px 12px)}
+.progress.gris .fill{background:repeating-linear-gradient(90deg,#808080 0 10px,transparent 10px 12px)}
+.small{color:#404040}
+
+.statusbar{display:flex;gap:2px;margin-top:4px}
+.statusbar div{padding:2px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.statusbar div:first-child{flex:1}
+
+/* barra de tareas */
+#taskbar{position:fixed;left:0;right:0;bottom:0;height:28px;background:var(--face);display:flex;
+  align-items:center;gap:4px;padding:2px;border-top:1px solid #FFF;box-shadow:inset 0 1px 0 #DFDFDF}
+#start{display:flex;align-items:center;gap:4px;font-weight:bold;height:22px;padding:0 6px}
+.task{width:180px;height:22px;display:flex;align-items:center;padding:0 6px;
+  border:2px solid;border-color:#000 #DFDFDF #DFDFDF #000;box-shadow:inset 1px 1px 0 #808080;
+  background:repeating-conic-gradient(#C0C0C0 0 25%,#DFDFDF 0 50%) 0 0/4px 4px;font-weight:bold;
+  white-space:nowrap;overflow:hidden}
+#clock{margin-left:auto;height:22px;padding:0 10px;display:flex;align-items:center}
+
+@media (max-width:820px){
+  body{overflow:auto}
+  #win{position:static;margin:6px 6px 40px;min-height:calc(100vh - 46px)}
+  #body{flex-direction:column}
+  #mapbox{min-height:380px}
+  .task{width:auto;flex:1}
+}
+</style>
+</head>
+<body>
+<div id="win" class="out">
+  <div class="titlebar">
+    <svg width="16" height="16" viewBox="0 0 16 16"><path d="M1 14 L6 5 L9 10 L11 7 L15 14Z" fill="#8B5A2B" stroke="#000"/><path d="M6 5 L7.5 7.5 L5 7.5Z" fill="#FFF"/></svg>
+    <span class="t">SATMM Santander: alerta temprana de movimientos en masa ({{ anio }})</span>
+    <span class="tbtn"><svg width="8" height="8"><rect x="0" y="6" width="6" height="2"/></svg></span>
+    <span class="tbtn"><svg width="9" height="9"><rect x=".5" y=".5" width="8" height="8" fill="none" stroke="#000"/><rect x="0" y="0" width="9" height="2"/></svg></span>
+    <span class="tbtn" style="margin-left:2px"><svg width="8" height="8"><path d="M0 0L8 8M8 0L0 8" stroke="#000" stroke-width="1.6"/></svg></span>
+  </div>
+  <div class="menubar"><span><u>A</u>rchivo</span><span><u>V</u>er</span><span><u>H</u>erramientas</span><span>Ay<u>u</u>da</span></div>
+  <div class="toolbar">
+    <button class="btn" id="prev" title="Mes anterior"><span>&lsaquo;</span></button>
+    <label>Mes: <select id="mes" class="field"></select></label>
+    <button class="btn" id="next" title="Mes siguiente"><span>&rsaquo;</span></button>
+    <span class="sep"></span>
+    <span class="chip"><span class="sq" style="background:var(--rojo)"></span>Rojo <b id="nR">0</b></span>
+    <span class="chip"><span class="sq" style="background:var(--amarillo)"></span>Amarillo <b id="nA">0</b></span>
+    <span class="chip"><span class="sq" style="background:var(--verde)"></span>Verde <b id="nV">0</b></span>
+    <span class="sep"></span>
+    <span class="chip" id="temporada"></span>
+  </div>
+
+  <div id="body">
+    <div id="mapbox" class="in"><iframe id="mapa" title="Mapa de alertas"></iframe></div>
+
+    <div id="side">
+      <div class="tabs">
+        <div class="tab out on" data-p="pAlertas"><u>A</u>lertas</div>
+        <div class="tab out" data-p="pBoletin"><u>B</u>oletín</div>
+        <div class="tab out" data-p="pDesempeno"><u>D</u>esempeño 2025</div>
+        <div class="tab out" data-p="pLimites"><u>L</u>ímites</div>
+      </div>
+      <div class="out" style="flex:1;display:flex;flex-direction:column;min-height:0">
+        <div class="page on" id="pAlertas">
+          <div class="list in">
+            <table><thead><tr><th class="num">#</th><th>Municipio</th><th>Nivel</th><th class="num">Prob.</th><th title="Dato real de 2025: ¿hubo movimiento en masa?">¿Ocurrió?</th></tr></thead>
+            <tbody id="filas"></tbody></table>
+          </div>
+          <fieldset><legend id="selNombre">Por qué</legend>
+            <div id="razones" class="in">Seleccione un municipio.</div>
+            <div style="margin-top:6px;text-align:right"><button class="btn" id="verBoletin" disabled><span>Ver boletín…</span></button></div>
+          </fieldset>
+        </div>
+
+        <div class="page" id="pBoletin">
+          <div id="verif" class="small">Seleccione un municipio en rojo.</div>
+          <div class="doc in" id="doc"></div>
+        </div>
+
+        <div class="page" id="pDesempeno">
+          <fieldset><legend>Prueba final 2025 (evaluada una sola vez)</legend>
+            <div class="kpi">
+              <span>Meses con deslizamiento detectados (rojo o amarillo)</span><b>{{ "%.0f"|format(metricas.recall_alerta*100) }} %</b>
+              <div class="progress" style="grid-column:1/3"><div class="fill" style="width:{{ metricas.recall_alerta*100 }}%"></div></div>
+              <span class="small">Línea base "repetir el año anterior"</span><b class="small">{{ "%.0f"|format(metricas.recall_A*100) }} %</b>
+              <div class="progress gris" style="grid-column:1/3"><div class="fill" style="width:{{ metricas.recall_A*100 }}%"></div></div>
+            </div>
+          </fieldset>
+          <fieldset><legend>Calidad del ranking (PR-AUC)</legend>
+            <div class="kpi">
+              <span>Nuestro modelo (XGBoost)</span><b>{{ "%.3f"|format(metricas.pr_auc) }}</b>
+              <div class="progress" style="grid-column:1/3"><div class="fill" style="width:{{ metricas.pr_auc/0.3*100 }}%"></div></div>
+              <span class="small">Climatología del municipio</span><b class="small">{{ "%.3f"|format(metricas.pr_auc_B) }}</b>
+              <div class="progress gris" style="grid-column:1/3"><div class="fill" style="width:{{ metricas.pr_auc_B/0.3*100 }}%"></div></div>
+              <span class="small">Repetir el año anterior</span><b class="small">{{ "%.3f"|format(metricas.pr_auc_A) }}</b>
+              <div class="progress gris" style="grid-column:1/3"><div class="fill" style="width:{{ metricas.pr_auc_A/0.3*100 }}%"></div></div>
+            </div>
+          </fieldset>
+          <fieldset><legend>Semáforo</legend>
+            <div class="kpi">
+              <span>En rojo, municipios que sí tuvieron deslizamiento</span><b>{{ "%.0f"|format(metricas.precision_rojo*100) }} %</b>
+              <span class="small">Tasa base (azar)</span><b class="small">{{ "%.1f"|format(metricas.tasa_base*100) }} %</b>
+              <span>Deslizamientos que quedaron en verde</span><b>{{ metricas.fn }} de {{ metricas.eventos }}</b>
+              <span>Boletines generados / con cifras sin fuente</span><b>{{ total_boletines }} / <span class="{{ 'ok' if intrusas_total == 0 else 'bad' }}">{{ intrusas_total }}</span></b>
+            </div>
+          </fieldset>
+          <div class="small">Validación por años: entrenado con 2016–2024, umbral amarillo fijado en 2024 (≥ 70 % de sensibilidad), rojo = 10 municipios más altos de cada mes.</div>
+        </div>
+
+        <div class="page" id="pLimites">
+          <div class="doc in">
+            <h3>Qué no puede anticipar este sistema</h3>
+            <ul>
+              <li><b>Lo que no se reporta.</b> Municipios con poco historial parecen seguros (subregistro).</li>
+              <li><b>Aguaceros de pocas horas.</b> La lluvia es mensual y medida en la cabecera.</li>
+              <li><b>Dónde y cuándo exactamente.</b> Responde municipio y mes, no vereda ni día.</li>
+              <li><b>Detonantes no climáticos:</b> sismos, cortes de talud, deforestación, fugas.</li>
+              <li><b>Meses secos.</b> La mayoría de los deslizamientos no detectados en 2025 ocurrió fuera de temporada.</li>
+            </ul>
+            <h3>Con lluvia diaria</h3>
+            <p>Usaríamos máximos de 1, 3 y 7 días y lluvia antecedente, que son los umbrales físicos de deslizamiento, y la alerta podría ser semanal.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="statusbar">
+    <div class="groove" id="st1">Listo</div>
+    <div class="groove" id="st2"></div>
+    <div class="groove">Boletines verificados: {{ total_boletines }}</div>
+  </div>
+</div>
+
+<div id="taskbar">
+  <button class="btn" id="start"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M1 2h6v6H1z" fill="#E33A2A"/><path d="M8 2h6v6H8z" fill="#3DB93D"/><path d="M1 9h6v6H1z" fill="#2A2AD1"/><path d="M8 9h6v6H8z" fill="#FFC000"/></svg><span>Inicio</span></button>
+  <div class="task">SATMM Santander</div>
+  <div id="clock" class="groove"></div>
+</div>
+
+<script>
+const MESES = {{ datos }};
+const $ = id => document.getElementById(id);
+const COLOR = {Rojo:"var(--rojo)", Amarillo:"var(--amarillo)", Verde:"var(--verde)"};
+let actual = 3, sel = null;
+
+MESES.forEach((m, i) => $("mes").add(new Option(m.nombre[0].toUpperCase() + m.nombre.slice(1) + " {{ anio }}", i)));
+
+function tab(id){
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t.dataset.p === id));
+  document.querySelectorAll(".page").forEach(p => p.classList.toggle("on", p.id === id));
+}
+document.querySelectorAll(".tab").forEach(t => t.onclick = () => tab(t.dataset.p));
+
+function mostrarMes(i){
+  actual = i; const m = MESES[i]; $("mes").value = i;
+  $("prev").disabled = i === 0; $("next").disabled = i === MESES.length - 1;
+  $("mapa").src = m.mapa;
+  $("nR").textContent = m.rojos; $("nA").textContent = m.amarillos; $("nV").textContent = m.verdes;
+  $("temporada").textContent = m.temporada ? "Temporada de lluvias: riesgo alto en todo el departamento" : "Fuera de temporada de lluvias";
+  $("st2").textContent = `Deslizamientos reales: ${m.eventos} · detectados (rojo o amarillo): ${m.detectados}`;
+  const tb = $("filas"); tb.innerHTML = "";
+  m.filas.forEach((f, k) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td class="num">${f.puesto}</td><td>${f.municipio}</td>
+      <td><span class="sq" style="background:${COLOR[f.nivel]}"></span> ${f.nivel}</td>
+      <td class="num">${f.p.toFixed(1).replace(".", ",")} %</td><td>${f.ocurrio ? "Sí" : ""}</td>`;
+    tr.onclick = () => elegir(k, tr);
+    tb.appendChild(tr);
+  });
+  elegir(0, tb.firstChild);
+}
+
+function elegir(k, tr){
+  document.querySelectorAll("#filas tr").forEach(r => r.classList.remove("sel"));
+  tr.classList.add("sel"); sel = MESES[actual].filas[k];
+  $("selNombre").textContent = `Por qué: ${sel.municipio} (${sel.nivel})`;
+  $("razones").innerHTML = sel.razones.length
+    ? "<ul>" + sel.razones.map(r => `<li>${r[0].toUpperCase() + r.slice(1)}</li>`).join("") + "</ul>"
+    : "Sin factores propios que suban el riesgo.";
+  $("verBoletin").disabled = !sel.boletin;
+  $("st1").textContent = `${sel.municipio}: puesto ${sel.puesto} de ${MESES[actual].filas.length}`;
+  if (sel.boletin){
+    $("doc").innerHTML = sel.boletin;
+    $("verif").innerHTML = sel.verificado
+      ? '<span class="ok">✔ Verificado:</span> todas las cifras salen de los datos.'
+      : '<span class="bad">✖ Cifras sin fuente detectadas.</span>';
+  } else {
+    $("doc").innerHTML = ""; $("verif").textContent = "Solo se emite boletín para municipios en rojo.";
+  }
+}
+
+$("mes").onchange = e => mostrarMes(+e.target.value);
+$("prev").onclick = () => mostrarMes(actual - 1);
+$("next").onclick = () => mostrarMes(actual + 1);
+$("verBoletin").onclick = () => tab("pBoletin");
+function reloj(){ const d = new Date(); $("clock").textContent = d.toTimeString().slice(0, 5); }
+reloj(); setInterval(reloj, 30000);
+mostrarMes(3);
+</script>
+</body>
+</html>

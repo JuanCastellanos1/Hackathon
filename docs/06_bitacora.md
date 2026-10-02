@@ -2,7 +2,7 @@
 
 Registro de cómo nos fue en cada fase: qué hicimos, qué se complicó, qué decidimos y qué queda pendiente. Es para guiarnos nosotros, no para el jurado. Las horas son aproximadas.
 
-**Cómo vamos:** resultado completo a las 14:52 (antes del hito de las 14:55) y modelo final probado en 2025 a las 15:00. Vamos unos 20 minutos adelantados.
+**Cómo vamos:** resultado completo a las 14:52 (antes del hito de las 14:55) y modelo final probado en 2025 a las 15:00. Explicación por municipio lista a las 15:03 y tablero a las 15:07. Vamos unos 25 minutos adelantados.
 
 | Fase | Estado | Terminó |
 |---|---|---|
@@ -12,8 +12,8 @@ Registro de cómo nos fue en cada fase: qué hicimos, qué se complicó, qué de
 | F2 · Validación y modelo simple | Hecha | 14:48 |
 | F3 · Primer resultado completo | Hecha | 14:52 |
 | F4 · Modelo principal y umbral | Hecha | 15:00 |
-| F5 · Explicación por municipio | Pendiente | |
-| F6 · Mapa y boletín finales | Pendiente | |
+| F5 · Explicación por municipio | Hecha | 15:03 |
+| F6 · Mapa, boletines y tablero | Hecha | 15:07 |
 | F7 · Cierre | Pendiente | |
 | F8 · Ensayo | Pendiente | |
 
@@ -107,6 +107,43 @@ Ninguno bloquea; los dos se resuelven en F4.
 
 **Un tropiezo:** escribimos en la sustentación que *todos* los deslizamientos no detectados eran de municipios sin historial. Lo verificamos y era falso: solo la mitad. Lo corregimos antes de que llegara al jurado. **Lección: toda cifra que vaya a la sustentación se verifica con el código.**
 
+## F5 · Explicación por municipio
+
+**Qué hicimos:** con SHAP medimos cuánto empuja cada dato la probabilidad de cada municipio. Agrupamos las 14 variables técnicas en 7 factores que entiende cualquiera: temporada, lluvia reciente, relieve, historial, ubicación, lluvia inusual y antecedentes en ese mes.
+
+**Lo que aprendió el modelo, en orden de peso:**
+1. **La temporada,** el factor más fuerte: abril–mayo y octubre–noviembre.
+2. **La lluvia de los meses anteriores.**
+3. **El relieve:** los municipios más altos tienen más riesgo.
+4. **El historial reciente** de deslizamientos.
+
+**Chequeo de sentido común:** el riesgo sube cuando sube la lluvia, el historial y la altitud. Si hubiera salido al revés, habría sido señal de un error. Salió bien.
+
+**Decisión:** la temporada salía como primera razón en *todos* los municipios del mes, así que no ayudaba a distinguir uno de otro. La dejamos como frase de contexto ("abril es temporada de lluvias: el riesgo sube en todo el departamento") y para cada municipio mostramos sus **3 razones propias**.
+
+**Ejemplo (San Andrés, abril de 2025, puesto 1):** 529,6 mm de lluvia en dos meses, cabecera a 1.650 m y 2 deslizamientos en el último año.
+
+**Dónde se ve:** en el boletín (sección "Por qué está en alerta") y en el mapa, al hacer clic en un municipio. Las cifras de las razones también pasan por el verificador.
+
+**Tropiezos:**
+- **Una razón se leía al revés.** A algunos municipios les salía como motivo de alerta "la lluvia del mes anterior fue 0,7 veces su promedio", es decir, que llovió *menos* de lo normal. Pasa porque dos variables de lluvia se solapan y el modelo las compensa entre sí. Ahora solo mostramos razones que un lector entendería en el sentido correcto (lluvia inusual solo si fue mayor que el promedio, historial solo si lo hay). Agregamos una prueba para que no vuelva a pasar.
+- Una gráfica salió encimada sobre otra al correr el código; se corrigió abriendo una figura nueva para cada gráfica.
+
+## F6 · Mapa, boletines y tablero
+
+**Qué hicimos:**
+- **Un mapa por cada mes de 2025.** Al pasar el mouse sale el municipio, su nivel y su probabilidad; al hacer clic, sus 3 razones.
+- **Un boletín para cada municipio que estuvo en rojo en 2025:** 98 boletines, y **ninguno con cifras sin fuente**. El verificador revisó los 98.
+- **Un tablero estilo Windows 98** (`out/tablero.html`) que junta todo: selector de mes, mapa, lista de municipios ordenada por riesgo, razones, boletín, desempeño en 2025 y límites del sistema. Funciona sin internet, salvo el fondo del mapa.
+
+**Para la presentación:** abrir `out/tablero.html` en el navegador y arrancar en abril (temporada de lluvias). Contraste útil: enero sale todo en verde, y en efecto hubo un solo deslizamiento.
+
+**La columna "¿Ocurrió?"** muestra el dato real de 2025. Sirve para mostrarle al jurado, mes a mes, dónde acertó el sistema y dónde no.
+
+**Tropiezo menor:** en la primera captura el mapa parecía tener solo los municipios verdes. Era que todavía estaba cargando; al terminar pinta los 87.
+
+**Ojo:** la carpeta `out/` no se sube a GitHub, porque se genera al correr el cuaderno. Si queremos el tablero en el repositorio o en una USB, hay que copiarlo aparte.
+
 ---
 
 ## Pendientes y preguntas abiertas
@@ -114,6 +151,7 @@ Ninguno bloquea; los dos se resuelven en F4.
 - [x] Decidir la regla del rojo en temporada de lluvias → los 10 más altos de cada mes (F4).
 - [x] Corregir los porcentajes inflados → XGBoost sin peso de clase (F4).
 - [x] Probar XGBoost contra la logística → gana XGBoost (F4).
-- [ ] Explicación por municipio: por qué sale cada uno en alerta (F5).
+- [x] Explicación por municipio: por qué sale cada uno en alerta (F5).
 - [ ] Preguntarle a la comisión si los datos son simulados.
-- [ ] Llenar las cifras reales en `05_sustentacion.md`.
+- [x] Llenar las cifras reales en `05_sustentacion.md`.
+- [ ] Decidir si `out/` (tablero, mapas, boletines) se sube al repositorio para la presentación.
